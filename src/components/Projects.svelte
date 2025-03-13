@@ -1,512 +1,299 @@
 <script>
   import { onMount } from 'svelte';
+  import { slide, fade } from 'svelte/transition';
+  import { cubicOut } from 'svelte/easing';
   
-  // Projects data
-  const projects = [
+  // Combine all projects into one array
+  const allProjects = [
     {
       id: 1,
-      title: 'CONCRETE MINIMALISM',
-      description: 'A residential project emphasizing clean lines and functional spaces, featuring exposed concrete and natural light.',
-      image: 'src/assets/buildings1.png',
+      title: 'SALAD',
+      subtitle: 'Healthy apparel',
+      description: 'Contemporary clothing with environmentally-friendly materials and minimalist aesthetic.',
+      image: 'src/assets/project1.png',
       year: '2023',
-      location: 'Zurich, Switzerland',
-      category: 'Residential'
+      tags: ['Fashion', 'Sustainability', 'Branding']
     },
     {
       id: 2,
-      title: 'URBAN GALLERY',
-      description: 'Modern art exhibition space designed with flexible layouts and innovative lighting solutions.',
-      image: 'src/assets/buildings2.png',
+      title: 'AEGLE\'S',
+      subtitle: 'Glowing skin naturally',
+      description: 'Premium skincare formulated with organic ingredients and scientific innovation.',
+      image: 'src/assets/project2.png',
       year: '2022',
-      location: 'Basel, Switzerland',
-      category: 'Cultural'
+      tags: ['Beauty', 'Packaging', 'Identity']
     },
     {
       id: 3,
-      title: 'ALPINE RETREAT',
-      description: 'Mountain cabin that blends traditional materials with contemporary design approach.',
-      image: 'src/assets/buildings3.png',
-      year: '2021',
-      location: 'Lucerne, Switzerland',
-      category: 'Hospitality'
+      title: 'CHASER',
+      subtitle: 'Ergonomic cybersecurity',
+      description: 'Digital security solutions with a focus on user-friendly interfaces and robust protection.',
+      image: 'src/assets/project3.png',
+      year: '2022',
+      tags: ['Tech', 'Security', 'Digital']
     },
     {
       id: 4,
+      title: 'VERTEX',
+      subtitle: 'Architectural innovation',
+      description: 'Cutting-edge structural designs that blend form and function in urban environments.',
+      image: 'src/assets/project4.png',
+      year: '2021',
+      tags: ['Architecture', 'Urban', 'Design']
+    },
+    {
+      id: 5,
+      title: 'CONCRETE MINIMALISM',
+      subtitle: 'Residential spaces',
+      description: 'Clean lines and functional spaces with exposed concrete and natural light.',
+      image: 'src/assets/buildings1.png',
+      year: '2023',
+      tags: ['Residential', 'Minimalist', 'Zurich']
+    },
+    {
+      id: 6,
+      title: 'URBAN GALLERY',
+      subtitle: 'Cultural spaces',
+      description: 'Exhibition space designed with flexible layouts and innovative lighting solutions.',
+      image: 'src/assets/buildings2.png',
+      year: '2022',
+      tags: ['Cultural', 'Exhibition', 'Basel']
+    },
+    {
+      id: 7,
+      title: 'ALPINE RETREAT',
+      subtitle: 'Mountain getaway',
+      description: 'Cabin blending traditional materials with contemporary design approach.',
+      image: 'src/assets/buildings3.png',
+      year: '2021',
+      tags: ['Hospitality', 'Alpine', 'Lucerne']
+    },
+    {
+      id: 8,
       title: 'GEOMETRIC OFFICE',
-      description: 'Corporate headquarters featuring modular workspaces and sustainable building practices.',
+      subtitle: 'Workspace solutions',
+      description: 'Corporate headquarters featuring modular spaces and sustainable building practices.',
       image: 'src/assets/buildings4.png',
       year: '2022',
-      location: 'Geneva, Switzerland',
-      category: 'Commercial'
+      tags: ['Commercial', 'Office', 'Geneva']
     }
   ];
   
   // States
-  let activeProject = $state(1);
-  let imagesLoaded = $state(new Set());
+  let hoveredProject = $state(null);
+  let inViewProjects = $state(new Set());
+  let loadedImages = $state(new Set());
   
-  function setActiveProject(id) {
-    // Add transition class to trigger fade-out animation
-    const projectDetails = document.querySelector('.project-details');
-    if (projectDetails) {
-      projectDetails.classList.add('transitioning-out');
-      
-      // Wait for animation to finish before changing project
-      setTimeout(() => {
-        activeProject = id;
-        // Remove transitioning class after state update
-        setTimeout(() => {
-          const newProjectDetails = document.querySelector('.project-details');
-          if (newProjectDetails) {
-            newProjectDetails.classList.remove('transitioning-out');
-            newProjectDetails.classList.add('transitioning-in');
-            
-            // Remove transitioning-in class after animation completes
-            setTimeout(() => {
-              newProjectDetails.classList.remove('transitioning-in');
-            }, 500);
-          }
-        }, 50);
-      }, 300);
-    } else {
-      activeProject = id;
-    }
+  function setHoveredProject(id) {
+    hoveredProject = id;
+  }
+  
+  function clearHoveredProject() {
+    hoveredProject = null;
   }
   
   function handleImageLoad(id) {
-    imagesLoaded.add(id);
+    loadedImages.add(id);
   }
   
   function setupScrollObserver() {
-    const animatedElements = [
-      { selector: '.section-number', className: 'slide-in-left' },
-      { selector: '.section-title h2', className: 'slide-up' },
-      { selector: '.section-description', className: 'slide-up' },
-      { selector: '.project-nav-item', className: 'fade-in' },
-      { selector: '.project-image', className: 'fade-in' },
-      { selector: '.project-info', className: 'slide-up' }
-    ];
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          const projectId = parseInt(entry.target.getAttribute('data-project-id'), 10);
+          
+          if (entry.isIntersecting) {
+            // Add project to in-view set
+            inViewProjects.add(projectId);
+          } else {
+            // Remove project from in-view set
+            inViewProjects.delete(projectId);
+          }
+        });
+      },
+      { 
+        threshold: 0.15,
+        rootMargin: '0px 0px -10% 0px'
+      }
+    );
     
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-        }
-      });
-    }, { threshold: 0.2 });
-    
-    // Add animation classes and observe elements
-    animatedElements.forEach(({ selector, className }) => {
-      document.querySelectorAll(selector).forEach(el => {
-        el.classList.add(className);
-        observer.observe(el);
-      });
+    // Observe all project items
+    document.querySelectorAll('.project-item').forEach(item => {
+      observer.observe(item);
     });
     
-    // Cleanup function
     return () => observer.disconnect();
   }
   
   // Lifecycle
   onMount(() => {
-    // Set up animations with a small delay to ensure DOM is ready
-    setTimeout(() => {
-      const cleanup = setupScrollObserver();
-      
-      // Preload the first project image
-      const img = new Image();
-      img.onload = () => handleImageLoad(activeProject);
-      img.src = projects.find(p => p.id === activeProject).image;
-      
-      return cleanup;
-    }, 100);
+    // Allow DOM to settle before setting up observer
+    setTimeout(setupScrollObserver, 100);
   });
 </script>
 
-<div class="projects">
-  <div class="section-header">
-    <div class="section-title">
-      <span class="section-number">01</span>
-      <h2>PROJECTS</h2>
-    </div>
-    <p class="section-description">
-      A collection of our architectural work showcasing minimalist design principles, functional excellence, and spatial innovation.
-    </p>
+<section class="projects-section">
+  <div class="projects-header">
+    <h2>projects</h2>
   </div>
   
-  <div class="projects-gallery">
-    <div class="projects-navigation">
-      {#each projects as project}
-        <button 
-          class="project-nav-item" 
-          class:active={activeProject === project.id}
-          on:click={() => setActiveProject(project.id)}
-        >
-          <span class="project-number">{project.id.toString().padStart(2, '0')}</span>
-          <span class="project-title">{project.title}</span>
-          {#if activeProject === project.id}
-            <span class="nav-indicator"></span>
-          {/if}
-        </button>
-      {/each}
-    </div>
-    
-    <div class="project-showcase">
-      {#each projects as project}
-        {#if activeProject === project.id}
-          <div class="project-details">
-            <div class="project-image parallax-element">
-              <!-- Loading placeholder -->
-              {#if !imagesLoaded.has(project.id)}
-                <div class="image-placeholder-loading">
-                  <div class="loading-indicator"></div>
-                </div>
-              {/if}
-              
-              <!-- Actual image with enhancements -->
-              <img 
-                src={project.image} 
-                alt={project.title}
-                class="image-actual project-image-{project.id}"
-                class:loaded={imagesLoaded.has(project.id)}
-                loading="lazy"
-                on:load={() => handleImageLoad(project.id)}
-              />
-              
-              <div class="image-overlay"></div>
-            </div>
-            
-            <div class="project-info">
-              <h3>{project.title}</h3>
-              <p>{project.description}</p>
-              
-              <div class="project-meta">
-                <div class="meta-item">
-                  <span class="meta-label">YEAR</span>
-                  <span class="meta-value">{project.year}</span>
-                </div>
-                <div class="meta-item">
-                  <span class="meta-label">LOCATION</span>
-                  <span class="meta-value">{project.location}</span>
-                </div>
-                <div class="meta-item">
-                  <span class="meta-label">CATEGORY</span>
-                  <span class="meta-value">{project.category}</span>
-                </div>
-              </div>
-              
-              <a href="/" class="view-project-btn">VIEW PROJECT</a>
-            </div>
-          </div>
-        {/if}
-      {/each}
-    </div>
+  <div class="projects-grid">
+    {#each allProjects as project (project.id)}
+      <!-- svelte-ignore a11y_no_static_element_interactions -->
+      <div 
+        class="project-item" 
+        data-project-id={project.id}
+        on:mouseenter={() => setHoveredProject(project.id)}
+        on:mouseleave={clearHoveredProject}
+        class:in-view={inViewProjects.has(project.id)}
+        class:hovered={hoveredProject === project.id}
+      >
+        <div class="project-image-container">
+          <div class="image-placeholder" class:hidden={loadedImages.has(project.id)}></div>
+          <img 
+            src={project.image} 
+            alt={project.title} 
+            class="project-image" 
+            loading="lazy" 
+            on:load={() => handleImageLoad(project.id)}
+            class:loaded={loadedImages.has(project.id)}
+          />
+        </div>
+        
+        <div class="project-content">
+          <h3 class="project-title">{project.title}</h3>
+          <p class="project-subtitle">{project.subtitle}</p>
+        </div>
+      </div>
+    {/each}
   </div>
-</div>
+</section>
 
 <style>
-  .projects {
+  .projects-section {
+    padding: 4rem 0;
     width: 100%;
   }
   
-  .section-header {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: calc(var(--grid-unit) * 4);
-    margin-bottom: calc(var(--grid-unit) * 8);
+  .projects-header {
+    margin-bottom: 4rem;
+    padding: 0 1rem;
+    text-align: center;
   }
   
-  .section-title {
-    display: flex;
-    align-items: baseline;
-    gap: calc(var(--grid-unit) * 2);
-  }
-  
-  .section-number {
-    font-size: 1rem;
-    color: var(--color-accent);
-    font-weight: 500;
-  }
-  
-  .section-title h2 {
-    font-size: 2.5rem;
-    font-weight: 500;
+  h2 {
+    font-size: 3rem;
+    font-weight: 600;
     letter-spacing: -0.02em;
+    color: var(--color-text);
     margin: 0;
   }
   
-  .section-description {
-    font-size: 1.125rem;
-    line-height: 1.6;
-    max-width: 550px;
-  }
-  
-  .projects-gallery {
+  .projects-grid {
     display: grid;
-    grid-template-columns: 1fr;
-    gap: calc(var(--grid-unit) * 6);
+    grid-template-columns: repeat(1, 1fr);
+    gap: 2rem;
+    margin-top: 2rem;
   }
   
-  .projects-navigation {
-    display: flex;
-    flex-direction: column;
-    gap: calc(var(--grid-unit) * 2);
-  }
-  
-  .project-nav-item {
-    display: flex;
-    align-items: center;
-    gap: calc(var(--grid-unit) * 2);
-    padding: calc(var(--grid-unit) * 2) 0;
-    background: none;
-    border: none;
-    border-bottom: 1px solid var(--color-border);
-    cursor: pointer;
-    text-align: left;
-    color: var(--color-text);
-    transition: all var(--transition-speed);
-    position: relative;
-  }
-  
-  .project-nav-item:hover {
-    color: var(--color-accent);
-  }
-  
-  .project-nav-item.active {
-    color: var(--color-accent);
-  }
-  
-  .project-number {
-    font-size: 0.875rem;
-    opacity: 0.6;
-    width: 32px;
-  }
-  
-  .project-title {
-    font-size: 1rem;
-    letter-spacing: 1px;
-    font-weight: 500;
-  }
-  
-  .nav-indicator {
-    position: absolute;
-    right: 0;
-    width: 8px;
-    height: 8px;
-    background-color: var(--color-accent);
-  }
-  
-  .project-showcase {
-    width: 100%;
-  }
-  
-  .project-details {
+  .project-item {
     display: grid;
-    grid-template-columns: 1fr;
-    gap: calc(var(--grid-unit) * 4);
-    opacity: 1;
-    transform: translateY(0);
-    transition: opacity 0.3s ease-out, transform 0.3s ease-out;
-  }
-  
-  .project-details.transitioning-out {
+    gap: 1rem;
     opacity: 0;
     transform: translateY(20px);
+    transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow: hidden;
+    cursor: pointer;
   }
   
-  .project-details.transitioning-in {
-    animation: fadeIn 0.5s ease-out forwards;
+  .project-item.in-view {
+    opacity: 1;
+    transform: translateY(0);
   }
   
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+  .project-image-container {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 3/2;
+    overflow: hidden;
+    background-color: var(--color-muted);
+  }
+  
+  .image-placeholder {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--color-muted);
+    z-index: 1;
+    opacity: 1;
+    transition: opacity 0.5s ease;
+  }
+  
+  .image-placeholder.hidden {
+    opacity: 0;
+    z-index: -1;
   }
   
   .project-image {
-    aspect-ratio: 16/9;
-    width: 100%;
-    overflow: hidden;
-    position: relative;
-    background-color: var(--color-muted);
-    box-shadow: 0 8px 30px rgba(0,0,0,0.12);
-    will-change: transform;
-  }
-  
-  /* Parallax effect for project image */
-  .parallax-element {
-    transition: transform 0.3s ease-out;
-  }
-  
-  @media (prefers-reduced-motion: no-preference) {
-    .parallax-element {
-      transform: translateY(0);
-    }
-    
-    .parallax-element:hover {
-      transform: translateY(-5px);
-    }
-  }
-  
-  /* Image loading placeholder */
-  .image-placeholder-loading {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: var(--color-muted);
-    z-index: 1;
-  }
-  
-  .loading-indicator {
-    width: 40px;
-    height: 40px;
-    border: 3px solid rgba(255, 255, 255, 0.3);
-    border-radius: 50%;
-    border-top-color: var(--color-accent);
-    animation: spin 1s ease-in-out infinite;
-  }
-  
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
-  
-  /* Actual image with filters */
-  .image-actual {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    object-position: center;
-    transition: transform 0.8s ease, filter 0.5s ease, opacity 0.8s ease;
-    filter: contrast(1.1) brightness(0.95) saturate(1.05);
-    will-change: transform, filter;
-    transform-origin: center;
-    position: relative;
-    z-index: 2;
+    transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s ease, filter 0.5s ease;
     opacity: 0;
+    filter: grayscale(100%);
   }
   
-  .image-actual:hover {
-    filter: contrast(1.15) brightness(1) saturate(1.1);
-    transform: scale(1.02);
-  }
-  
-  .image-actual.loaded {
+  .project-image.loaded {
     opacity: 1;
   }
   
-  .image-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.3) 100%);
-    z-index: 3;
-    pointer-events: none;
+  .project-item.hovered .project-image {
+    transform: scale(1.05);
+    filter: grayscale(0%);
   }
   
-  .project-info {
-    padding: calc(var(--grid-unit) * 2);
+  .project-content {
+    padding: 0.5rem 0 1.5rem;
   }
   
-  .project-info h3 {
+  .project-title {
     font-size: 1.5rem;
-    margin: 0 0 calc(var(--grid-unit) * 2) 0;
-    font-weight: 500;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    margin: 0;
+    margin-bottom: 0.5rem;
   }
   
-  .project-info p {
-    margin: 0 0 calc(var(--grid-unit) * 4) 0;
-    line-height: 1.6;
-  }
-  
-  .project-meta {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: calc(var(--grid-unit) * 3);
-    margin-bottom: calc(var(--grid-unit) * 4);
-    border-top: 1px solid var(--color-border);
-    padding-top: calc(var(--grid-unit) * 3);
-  }
-  
-  .meta-item {
-    display: flex;
-    flex-direction: column;
-    gap: calc(var(--grid-unit));
-  }
-  
-  .meta-label {
-    font-size: 0.75rem;
-    opacity: 0.6;
-  }
-  
-  .meta-value {
-    font-size: 0.875rem;
-    font-weight: 500;
-  }
-  
-  .view-project-btn {
-    display: inline-block;
-    background-color: transparent;
-    border: 1px solid var(--color-text);
-    color: var(--color-text);
-    text-decoration: none;
-    padding: calc(var(--grid-unit) * 1.5) calc(var(--grid-unit) * 3);
-    font-size: 0.875rem;
-    font-weight: 500;
-    letter-spacing: 1px;
-    transition: all var(--transition-speed);
-    position: relative;
-    overflow: hidden;
-  }
-  
-  .view-project-btn:hover {
-    background-color: var(--color-text);
-    color: var(--color-bg);
-  }
-  
-  .view-project-btn::after {
-    content: "";
-    position: absolute;
-    width: 0;
-    height: 2px;
-    bottom: 0;
-    left: 0;
-    background-color: var(--color-accent);
-    transition: width 0.3s ease;
-  }
-  
-  .view-project-btn:hover::after {
-    width: 100%;
+  .project-subtitle {
+    font-size: 1rem;
+    margin: 0;
+    color: var(--color-secondary);
   }
   
   @media (min-width: 768px) {
-    .section-header {
-      grid-template-columns: 1fr 1fr;
-      align-items: end;
+    .projects-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 2rem;
+    }
+  }
+  
+  @media (min-width: 992px) {
+    .projects-header {
+      padding: 0;
     }
     
-    .projects-gallery {
-      grid-template-columns: 300px 1fr;
+    .projects-grid {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2.5rem;
     }
-    
-    .project-details {
-      grid-template-columns: 1fr 400px;
-    }
-    
-    .project-image {
-      aspect-ratio: 1/1.5;
+  }
+  
+  @media (min-width: 1200px) {
+    .projects-grid {
+      grid-template-columns: repeat(4, 1fr);
+      gap: 3rem;
     }
   }
 </style> 

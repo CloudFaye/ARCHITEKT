@@ -1,269 +1,272 @@
 <script>
+  import ImageWithEffect from '../components/ImageWithEffect.svelte';
+  
   // Design principles data
   const designPrinciples = [
     {
       id: 1,
       title: 'MINIMALISM',
-      description: 'Reducing design elements to only what is necessary, focusing on simplicity, clarity and elimination of the superfluous.',
-      icon: '□'
+      description: 'Reducing design elements to only what is necessary, focusing on simplicity, clarity and elimination of the superfluous.'
     },
     {
       id: 2,
-      title: 'GRID SYSTEMS',
-      description: 'Employing mathematical grid structures to create visual harmony, alignment and spatial organization in our designs.',
-      icon: '▦'
+      title: 'PRECISION',
+      description: 'Executing each design with meticulous attention to detail, proportions and construction quality.'
     },
     {
       id: 3,
-      title: 'TYPOGRAPHY',
-      description: 'Using clean, sans-serif typography with careful attention to hierarchy, spacing, and readability.',
-      icon: 'A'
+      title: 'FUNCTIONALITY',
+      description: 'Designing with purpose where form follows function and every element serves a practical purpose.'
     },
     {
       id: 4,
-      title: 'PRECISION',
-      description: 'Executing each design with meticulous attention to detail, proportions and construction quality.',
-      icon: '+'
-    },
-    {
-      id: 5,
-      title: 'FUNCTIONALITY',
-      description: 'Designing with purpose where form follows function and every element serves a practical purpose.',
-      icon: '▢'
-    },
-    {
-      id: 6,
       title: 'WHITE SPACE',
-      description: 'Utilizing negative space as an active design element to create breathing room and visual clarity.',
-      icon: '◯'
+      description: 'Utilizing negative space as an active design element to create breathing room and visual clarity.'
     }
   ];
+  
+  // Stats data
+  const stats = [
+    { value: '95', unit: '%', label: 'SUSTAINABLE MATERIALS' },
+    { value: '120', unit: '+', label: 'COMPLETED PROJECTS' },
+    { value: '15', unit: '', label: 'DESIGN AWARDS' }
+  ];
+  
+  // Quote
+  const quote = {
+    text: "Design is not just what it looks like and feels like. Design is how it works.",
+    author: "Steve Jobs"
+  };
+  
+  // Background image
+  const backgroundImage = "src/assets/texture2.png";
+  
+  let isBackgroundLoaded = $state(false);
+  
+  function handleBackgroundLoad() {
+    isBackgroundLoaded = true;
+  }
 </script>
 
-<div class="design-language">
-  <div class="section-header">
-    <div class="section-title">
-      <span class="section-number">02</span>
-      <h2>DESIGN LANGUAGE</h2>
-    </div>
-    <p class="section-description">
-      Our architectural approach is rooted in Swiss design principles, emphasizing clarity, functionality, and timeless aesthetics.
-    </p>
+<section class="design-language-section">
+  <div class="background-image-container">
+    <div class="background-overlay"></div>
+    <img 
+      src={backgroundImage} 
+      alt="Textured background" 
+      class="background-image" 
+      class:loaded={isBackgroundLoaded}
+      on:load={handleBackgroundLoad}
+    />
   </div>
   
-  <div class="principles-grid">
-    {#each designPrinciples as principle}
-      <div class="principle-card">
-        <div class="principle-icon">{principle.icon}</div>
-        <h3 class="principle-title">{principle.title}</h3>
-        <p class="principle-description">{principle.description}</p>
-      </div>
-    {/each}
-  </div>
-  
-  <div class="design-showcase">
-    <div class="showcase-header">
-      <h3>OUR APPROACH</h3>
-      <div class="showcase-line"></div>
+  <div class="design-language-content">
+    <div class="section-header">
+      <h2 class="section-title slide-up">Design Philosophy</h2>
+      <p class="section-subtitle slide-up">Our approach to creating timeless, functional aesthetics</p>
     </div>
     
-    <div class="showcase-content">
-      <div class="design-quote">
-        <blockquote>
-          "Architecture should speak of its time and place, but yearn for timelessness."
-        </blockquote>
-        <cite>— Frank Gehry</cite>
-      </div>
-      
-      <div class="design-stats">
-        <div class="stat-item">
-          <div class="stat-value">95%</div>
-          <div class="stat-label">SUSTAINABLE MATERIALS</div>
+    <div class="design-principles">
+      {#each designPrinciples as principle}
+        <div class="principle-item slide-up">
+          <h3 class="principle-title">{principle.title}</h3>
+          <p class="principle-description">{principle.description}</p>
         </div>
-        <div class="stat-item">
-          <div class="stat-value">100+</div>
-          <div class="stat-label">COMPLETED PROJECTS</div>
+      {/each}
+    </div>
+    
+    <div class="design-quote slide-in-left">
+      <blockquote>"{quote.text}"</blockquote>
+      <cite>— {quote.author}</cite>
+    </div>
+    
+    <div class="design-stats">
+      {#each stats as stat}
+        <div class="stat-item zoom-in">
+          <div class="stat-value">{stat.value}<span>{stat.unit}</span></div>
+          <div class="stat-label">{stat.label}</div>
         </div>
-        <div class="stat-item">
-          <div class="stat-value">15</div>
-          <div class="stat-label">DESIGN AWARDS</div>
-        </div>
-      </div>
+      {/each}
     </div>
   </div>
-</div>
+</section>
 
 <style>
-  .design-language {
+  .design-language-section {
+    position: relative;
     width: 100%;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+  }
+  
+  .background-image-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    overflow: hidden;
+  }
+  
+  .background-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--color-bg);
+    opacity: 0.92;
+    z-index: 1;
+  }
+  
+  .background-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 1s ease;
+    filter: grayscale(100%) contrast(0.8) brightness(0.6);
+  }
+  
+  .background-image.loaded {
+    opacity: 1;
+  }
+  
+  .design-language-content {
+    padding: 6rem 2rem;
+    max-width: 1200px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 5rem;
   }
   
   .section-header {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: calc(var(--grid-unit) * 4);
-    margin-bottom: calc(var(--grid-unit) * 8);
+    text-align: center;
+    margin-bottom: 2rem;
   }
   
   .section-title {
-    display: flex;
-    align-items: baseline;
-    gap: calc(var(--grid-unit) * 2);
-  }
-  
-  .section-number {
-    font-size: 1rem;
-    color: var(--color-accent);
-    font-weight: 500;
-  }
-  
-  .section-title h2 {
-    font-size: 2.5rem;
-    font-weight: 500;
-    letter-spacing: -0.02em;
+    font-size: 3.5rem;
+    font-weight: 600;
     margin: 0;
+    letter-spacing: -0.03em;
   }
   
-  .section-description {
-    font-size: 1.125rem;
-    line-height: 1.6;
-    max-width: 550px;
+  .section-subtitle {
+    font-size: 1.2rem;
+    color: var(--color-secondary);
+    margin: 1rem 0 0 0;
   }
   
-  .principles-grid {
+  .design-principles {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: calc(var(--grid-unit) * 4);
-    margin-bottom: calc(var(--grid-unit) * 10);
+    grid-template-columns: repeat(1, 1fr);
+    gap: 2rem;
   }
   
-  .principle-card {
-    padding: calc(var(--grid-unit) * 3);
-    border: 1px solid var(--color-border);
-    transition: all var(--transition-speed);
-  }
-  
-  .principle-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-  }
-  
-  .principle-icon {
-    font-size: 2.5rem;
-    margin-bottom: calc(var(--grid-unit) * 3);
-    color: var(--color-accent);
+  .principle-item {
+    padding: 2rem;
+    background-color: var(--color-muted);
+    position: relative;
+    overflow: hidden;
   }
   
   .principle-title {
-    font-size: 1.25rem;
-    font-weight: 500;
-    margin: 0 0 calc(var(--grid-unit) * 2) 0;
-    letter-spacing: 1px;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0 0 1rem 0;
+    letter-spacing: 0.05em;
   }
   
   .principle-description {
-    font-size: 0.9375rem;
+    font-size: 1rem;
     line-height: 1.6;
     margin: 0;
-    color: var(--color-secondary);
-  }
-  
-  .design-showcase {
-    margin-top: calc(var(--grid-unit) * 8);
-  }
-  
-  .showcase-header {
-    display: flex;
-    align-items: center;
-    gap: calc(var(--grid-unit) * 3);
-    margin-bottom: calc(var(--grid-unit) * 6);
-    justify-content: center;
-  }
-  
-  .showcase-header h3 {
-    font-size: 1.5rem;
-    font-weight: 500;
-    margin: 0;
-    white-space: nowrap;
-  }
-  
-  .showcase-line {
-    flex-grow: 1;
-    height: 1px;
-    background-color: var(--color-border);
-  }
-  
-  .showcase-content {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: calc(var(--grid-unit) * 6);
+    max-width: 90%;
   }
   
   .design-quote {
-    font-size: 1.5rem;
+    font-size: 1.8rem;
     line-height: 1.4;
-    padding: calc(var(--grid-unit) * 2);
-    position: relative;
+    max-width: 800px;
+    margin: 0 auto;
+    text-align: center;
+    padding: 0 2rem;
   }
   
   .design-quote blockquote {
+    margin: 0 0 1rem 0;
     font-style: italic;
-    margin: 0 0 calc(var(--grid-unit) * 2) 0;
-    position: relative;
-    padding-left: calc(var(--grid-unit) * 4);
-  }
-  
-  .design-quote blockquote::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    height: 100%;
-    width: 2px;
-    background-color: var(--color-accent);
+    font-weight: 300;
   }
   
   .design-quote cite {
     font-style: normal;
     font-size: 1rem;
-    opacity: 0.7;
+    color: var(--color-secondary);
     display: block;
-    text-align: right;
   }
   
   .design-stats {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: calc(var(--grid-unit) * 3);
+    grid-template-columns: repeat(1, 1fr);
+    gap: 2rem;
   }
   
   .stat-item {
     text-align: center;
-    padding: calc(var(--grid-unit) * 3);
+    padding: 2rem;
     background-color: var(--color-muted);
   }
   
   .stat-value {
-    font-size: 2.5rem;
+    font-size: 3.5rem;
     font-weight: 700;
-    margin-bottom: calc(var(--grid-unit));
-    color: var(--color-accent);
+    line-height: 1;
+    margin-bottom: 0.5rem;
+    display: flex;
+    justify-content: center;
+    align-items: baseline;
+  }
+  
+  .stat-value span {
+    font-size: 1.5rem;
+    margin-left: 2px;
   }
   
   .stat-label {
-    font-size: 0.75rem;
-    letter-spacing: 1px;
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
     font-weight: 500;
+    color: var(--color-secondary);
   }
   
   @media (min-width: 768px) {
-    .section-header {
-      grid-template-columns: 1fr 1fr;
-      align-items: end;
+    .design-principles {
+      grid-template-columns: repeat(2, 1fr);
     }
     
-    .showcase-content {
-      grid-template-columns: 1fr 1fr;
+    .design-stats {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  
+  @media (min-width: 992px) {
+    .design-language-content {
+      padding: 8rem 2rem;
+    }
+    
+    .design-principles {
+      grid-template-columns: repeat(4, 1fr);
+    }
+    
+    .section-title {
+      font-size: 4rem;
     }
   }
 </style> 

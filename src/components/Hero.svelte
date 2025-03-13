@@ -6,9 +6,9 @@
   <div class="hero-content">
     <div class="hero-title-container">
       <h1 class="hero-title">
+        <span class="title-line">MODERN</span>
         <span class="title-line">SWISS</span>
-        <span class="title-line">DESIGN</span>
-        <span class="title-line">ARCHITECTURE</span>
+        <span class="title-line">SPACES</span>
       </h1>
     </div>
     

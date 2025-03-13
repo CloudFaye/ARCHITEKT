@@ -1,12 +1,14 @@
 <script>
   import { onMount } from 'svelte';
-  import { animate, inView, scroll } from 'motion';
+  import { animate, inView } from 'motion';
   import Navigation from '../src/components/Navigation.svelte'
   import Hero from '../src/components/Hero.svelte';
   import Projects from '../src/components/Projects.svelte';
   import DesignLanguage from '../src/components/DesignLanguage.svelte';
   import Contact from '../src/components/Contact.svelte';
   import Footer from '../src/components/Footer.svelte';
+  import ImageWithEffect from '../src/components/ImageWithEffect.svelte';
+  import ButtonWithEffect from '../src/components/ButtonWithEffect.svelte';
   
   // Theme state
   let isDarkMode = $state(false);
@@ -26,7 +28,7 @@
     isMenuOpen = !isMenuOpen;
   }
   
-  // Scroll to section with Motion
+  // Scroll to section with native smooth scroll
   function scrollToSection(id) {
     const section = document.getElementById(id);
     if (section) {
@@ -40,119 +42,68 @@
   
   // Set up Motion scroll animations
   function setupScrollAnimations() {
-    // Set up scroll-triggered animations
-    document.querySelectorAll('.reveal-on-scroll').forEach(element => {
-      inView(element, () => {
-        animate(element, {
-          opacity: [0, 1],
-          y: [30, 0],
-          scale: [0.97, 1]
-        }, {
-          duration: 0.8,
-          easing: [0.22, 0.03, 0.26, 1],
-          delay: 0.1
-        });
-        
-        return () => {
-          // Reset animation when element is out of view
-          animate(element, { 
-            opacity: [1, 0], 
-            y: [0, 30], 
-            scale: [1, 0.97] 
-          }, { duration: 0 });
-        };
-      }, { margin: "-10% 0px -10% 0px" });
+    // Generic function to handle element animation with inView
+    function setupElementAnimation(selector, animationProps, options = {}) {
+      document.querySelectorAll(selector).forEach(element => {
+        inView(element, () => {
+          try {
+            // @ts-ignore - Motion types are not fully compatible with TS
+            animate(element, animationProps, {
+              duration: 0.8,
+              ...options
+            });
+          } catch (err) {
+            console.error('Animation error:', err);
+          }
+          
+          return () => {
+            // Optional: Reset animations when scrolling out of view
+            // We're not resetting to avoid jarring transitions
+          };
+        }, { margin: "-10% 0px -10% 0px" });
+      });
+    }
+    
+    // Set up different animation types
+    setupElementAnimation('.reveal-on-scroll', { 
+      opacity: [0, 1],
+      y: [30, 0],
+      scale: [0.97, 1]
+    }, { 
+      duration: 0.8,
+      delay: 0.1
     });
     
-    // Set up fade-in elements
-    document.querySelectorAll('.fade-in').forEach(element => {
-      inView(element, () => {
-        animate(element, { opacity: [0, 1] }, { duration: 0.8 });
-        
-        return () => {
-          animate(element, { opacity: [1, 0] }, { duration: 0 });
-        };
-      });
+    setupElementAnimation('.fade-in', { 
+      opacity: [0, 1] 
     });
     
-    // Set up slide-up elements
-    document.querySelectorAll('.slide-up').forEach(element => {
-      inView(element, () => {
-        animate(element, { 
-          y: [30, 0], 
-          opacity: [0, 1] 
-        }, { duration: 0.6 });
-        
-        return () => {
-          animate(element, { 
-            y: [0, 30], 
-            opacity: [1, 0] 
-          }, { duration: 0 });
-        };
-      });
+    setupElementAnimation('.slide-up', { 
+      y: [30, 0], 
+      opacity: [0, 1] 
+    }, { 
+      duration: 0.6 
     });
     
-    // Set up slide-in-left elements
-    document.querySelectorAll('.slide-in-left').forEach(element => {
-      inView(element, () => {
-        animate(element, { 
-          x: [-30, 0], 
-          opacity: [0, 1] 
-        }, { duration: 0.6 });
-        
-        return () => {
-          animate(element, { 
-            x: [0, -30], 
-            opacity: [1, 0] 
-          }, { duration: 0 });
-        };
-      });
+    setupElementAnimation('.slide-in-left', { 
+      x: [-30, 0], 
+      opacity: [0, 1] 
+    }, { 
+      duration: 0.6 
     });
     
-    // Set up image hover animations (grayscale to color)
-    document.querySelectorAll('.image-hover-effect').forEach(element => {
-      element.addEventListener('mouseenter', () => {
-        animate(element, { 
-          filter: ['grayscale(100%)', 'grayscale(0%)'] 
-        }, { duration: 0.4, easing: 'ease-out' });
-      });
-      
-      element.addEventListener('mouseleave', () => {
-        animate(element, { 
-          filter: ['grayscale(0%)', 'grayscale(100%)'] 
-        }, { duration: 0.4, easing: 'ease-out' });
-      });
+    setupElementAnimation('.slide-in-right', { 
+      x: [30, 0], 
+      opacity: [0, 1] 
+    }, { 
+      duration: 0.6 
     });
     
-    // Set up button hover animations
-    document.querySelectorAll('.button-hover-effect').forEach(element => {
-      element.addEventListener('mouseenter', () => {
-        animate(element, { 
-          scale: [1, 1.05],
-          backgroundColor: element.dataset.hoverColor || null
-        }, { duration: 0.2 });
-      });
-      
-      element.addEventListener('mouseleave', () => {
-        animate(element, { 
-          scale: [1.05, 1],
-          backgroundColor: element.dataset.normalColor || null
-        }, { duration: 0.2 });
-      });
-    });
-    
-    // Parallax effect on scroll (fixed to work with motion API)
-    document.querySelectorAll('.parallax-element').forEach(element => {
-      // Get the parallax rate from data attribute or use default
-      const rate = parseFloat(element.getAttribute('data-parallax-rate') || '0.1');
-      
-      // Set up scroll watcher
-      document.addEventListener('scroll', () => {
-        const scrollY = window.scrollY;
-        animate(element, { 
-          translateY: `${-scrollY * rate}px` 
-        }, { duration: 0 });
-      });
+    setupElementAnimation('.zoom-in', { 
+      scale: [0.9, 1], 
+      opacity: [0, 1] 
+    }, { 
+      duration: 0.7 
     });
   }
   
@@ -182,16 +133,6 @@
     // Clean up observer on component unmount
     return () => {
       observer.disconnect();
-      
-      // Clean up event listeners
-      document.querySelectorAll('.image-hover-effect, .button-hover-effect').forEach(element => {
-        element.removeEventListener('mouseenter', null);
-        element.removeEventListener('mouseleave', null);
-      });
-      
-      document.querySelectorAll('.parallax-element').forEach(() => {
-        document.removeEventListener('scroll', null);
-      });
     };
   });
 </script>
@@ -211,15 +152,17 @@
       <Hero />
     </section>
     
-    <section id="projects" class="reveal-on-scroll">
+    <section id="projects" class="full-width">
       <Projects />
     </section>
     
-    <section id="design" class="reveal-on-scroll">
+    <section id="design">
+      <h2 class="slide-up">Design Language</h2>
       <DesignLanguage />
     </section>
     
-    <section id="contact" class="reveal-on-scroll">
+    <section id="contact">
+      <h2 class="slide-up">Contact</h2>
       <Contact />
     </section>
   </main>
@@ -290,6 +233,19 @@
     scroll-margin-top: calc(var(--grid-unit) * 10);
   }
   
+  section.full-width {
+    max-width: 100%;
+    width: 100%;
+    padding-left: 0;
+    padding-right: 0;
+  }
+  
+  h2 {
+    font-size: 2.5rem;
+    margin-bottom: 2rem;
+    color: var(--color-accent);
+  }
+  
   /* Initial Motion animation states */
   :global(.reveal-on-scroll) {
     opacity: 0;
@@ -314,26 +270,25 @@
     will-change: transform, opacity;
   }
   
-  :global(.parallax-element) {
-    will-change: transform;
+  :global(.slide-in-right) {
+    opacity: 0;
+    transform: translateX(30px);
+    will-change: transform, opacity;
   }
   
-  /* Image hover effect - default grayscale */
-  :global(.image-hover-effect) {
-    filter: grayscale(100%);
-    transition: filter var(--transition-speed);
-    will-change: filter;
-  }
-  
-  /* Button hover effect */
-  :global(.button-hover-effect) {
-    transition: transform var(--transition-speed), background-color var(--transition-speed);
-    will-change: transform, background-color;
+  :global(.zoom-in) {
+    opacity: 0;
+    transform: scale(0.9);
+    will-change: transform, opacity;
   }
   
   @media (max-width: 768px) {
     section {
       padding: calc(var(--grid-unit) * 8) 0;
+    }
+    
+    h2 {
+      font-size: 2rem;
     }
   }
   
@@ -343,12 +298,10 @@
     :global(.fade-in),
     :global(.slide-up),
     :global(.slide-in-left),
-    :global(.image-hover-effect),
-    :global(.button-hover-effect),
-    :global(.parallax-element) {
+    :global(.slide-in-right),
+    :global(.zoom-in) {
       transition: none !important;
       transform: none !important;
-      filter: none !important;
       opacity: 1 !important;
     }
   }
